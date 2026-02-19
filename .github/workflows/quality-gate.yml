@@ -38,7 +38,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Importante para que SonarCloud analice todo el historial
+          fetch-depth: 0
 
       - name: Use Node.js 20
         uses: actions/setup-node@v4
@@ -58,22 +58,20 @@ jobs:
       - name: Unit tests
         run: npm test
 
-      - name: Coverage (threshold gate)
+      - name: Coverage
         run: npm run test:cov
 
       - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@v2
+        uses: SonarSource/sonarcloud-github-action@v3
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Añadido para permisos de PR
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-      - name: E2E / Contract tests
+      - name: E2E Tests
         run: npm run test:e2e
 
-      - name: Start server in background
+      - name: Smoke Test (Curl)
         run: |
           npm run start &
-          sleep 5
-          
-      - name: Curl test
-        run: curl http://localhost:3000/movies
+          sleep 10
+          curl -f http://localhost:3000/movies || exit 1
